@@ -1,0 +1,1000 @@
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>جدول مدل‌های چند‌ارائه‌دهنده (OpenRouter، UnoRouter، Together AI و ۷ منبع دیگر)</title>
+<style>
+  :root{
+    --bg:#0d0f15; --panel:#161a23; --row:#12151d; --row-alt:#161a23; --row-hover:#1e2431;
+    --border:#272c39; --text:#e8eaf0; --muted:#98a1b4; --accent:#7c9cff;
+    --none:#39404e; --chip:#1e2431;
+    --warn:#ffb454; --bad:#ff6b81; --out:#3ddc97;
+  }
+  @media (prefers-color-scheme:light){
+    :root{
+      --bg:#f4f6fa; --panel:#fff; --row:#fff; --row-alt:#f8f9fc; --row-hover:#edf1ff;
+      --border:#e0e4ee; --text:#171a22; --muted:#5c6478; --accent:#3455d1;
+      --none:#c6ccd9; --chip:#eef1f8;
+      --warn:#b26a00; --bad:#c1273b; --out:#0f9d63;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--bg); color:var(--text); line-height:1.6;
+       font-family:"Vazirmatn","Segoe UI",Tahoma,system-ui,sans-serif}
+  .wrap{max-width:1600px; margin:0 auto; padding:0 16px}
+  header{border-bottom:1px solid var(--border); padding:20px 0 12px}
+  h1{margin:0 0 4px; font-size:1.3rem}
+  .sub{margin:0; color:var(--muted); font-size:.84rem}
+  code{background:var(--chip); padding:1px 6px; border-radius:5px; font-size:.85em;
+       direction:ltr; display:inline-block}
+
+  .toolbar{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:12px}
+  input[type="search"],input[type="password"],select,button{font:inherit; color:var(--text); background:var(--panel);
+       border:1px solid var(--border); border-radius:9px; padding:8px 12px}
+  input[type="search"]{flex:1 1 220px; min-width:180px}
+  button,select{cursor:pointer}
+  button:hover,select:hover{border-color:var(--accent)}
+  button:disabled{opacity:.4; cursor:not-allowed}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+  .filters{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; align-items:center}
+  .filters .lbl{color:var(--muted); font-size:.8rem; margin-inline-end:2px}
+  .f{background:var(--panel); border:1px solid var(--border); color:var(--muted);
+     border-radius:999px; padding:4px 12px; font-size:.78rem}
+  .f[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:#fff}
+  .f.prov[aria-pressed="true"]{background:var(--pc,var(--accent)); border-color:var(--pc,var(--accent)); color:#fff}
+
+  details.settings{margin-top:10px; border:1px solid var(--border); border-radius:12px;
+      background:var(--panel); padding:2px 14px}
+  details.settings summary{cursor:pointer; padding:8px 0; font-size:.84rem; color:var(--accent)}
+  .keyrow{display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:6px 0 14px}
+  .keyrow label{font-size:.78rem; color:var(--muted); min-width:110px}
+  .keyrow input[type="text"],.keyrow input[type="password"]{flex:1 1 220px; direction:ltr}
+  .keyrow select{flex:1 1 220px}
+  .keyrow input[type="checkbox"]{width:auto}
+  .keynote{color:var(--muted); font-size:.76rem; margin:0 0 8px}
+  .keysub{margin:14px 0 4px; font-size:.8rem; color:var(--muted)}
+  #keyRows .keyrow{border-top:1px solid var(--border); padding-top:10px}
+  .p-chk{display:flex; align-items:center; gap:6px; min-width:190px; font-size:.78rem; color:var(--text)}
+  .statusmsg{font-size:.76rem; color:var(--muted)}
+
+  .badge{display:inline-block; border-radius:999px; padding:1px 9px; font-size:.72rem; font-weight:600; color:#fff}
+
+  .legend{display:flex; gap:14px; flex-wrap:wrap; margin:12px 0; font-size:.76rem; color:var(--muted)}
+
+  .tablebox{overflow:auto; max-height:74vh; border:1px solid var(--border);
+            border-radius:14px; background:var(--panel)}
+  table{border-collapse:separate; border-spacing:0; width:100%; font-size:.84rem}
+  thead th{position:sticky; top:0; z-index:3; background:var(--panel);
+           border-bottom:1px solid var(--border); padding:9px 10px;
+           text-align:center; white-space:nowrap; font-weight:600}
+  thead th.name-col{z-index:4; text-align:right}
+  th.sortable{cursor:pointer; user-select:none}
+  th.sortable:hover{color:var(--accent)}
+  th .cat{display:block; font-size:.7rem; color:var(--muted); font-weight:400}
+
+  tbody td{border-bottom:1px solid var(--border); padding:8px 10px; text-align:center; white-space:nowrap}
+  tbody tr.row{background:var(--row); cursor:pointer}
+  tbody tr.row:nth-child(even){background:var(--row-alt)}
+  tbody tr.row:hover{background:var(--row-hover)}
+  td.name-col,th.name-col{position:sticky; right:0; background:inherit; text-align:right;
+       border-inline-start:1px solid var(--border); max-width:320px; white-space:normal}
+  thead th.name-col{background:var(--panel)}
+  .mtitle{font-weight:600}
+  .mid{display:block; color:var(--muted); font-size:.75rem; direction:ltr; text-align:right;
+       word-break:break-all}
+  .yes{color:var(--uno); font-weight:700}
+  .no{color:var(--none)}
+  .muted{color:var(--muted)}
+  .mods{font-size:.74rem; color:var(--muted); direction:ltr}
+  .price{direction:ltr; font-variant-numeric:tabular-nums; font-size:.8rem}
+  tfoot td{position:sticky; bottom:0; background:var(--panel); border-top:1px solid var(--border);
+           padding:8px 10px; text-align:center; color:var(--muted); font-size:.76rem}
+  tfoot td.name-col{text-align:right; right:0; z-index:3}
+
+  tr.detail td{text-align:right; background:var(--bg); white-space:normal; padding:14px}
+  .specs{margin:0 0 10px; display:grid; gap:4px 14px;
+         grid-template-columns:auto 1fr auto 1fr; font-size:.82rem}
+  .specs dt{color:var(--muted); white-space:nowrap}
+  .specs dd{margin:0; word-break:break-word}
+  pre{margin:0; padding:12px; background:var(--chip); border-radius:10px;
+      direction:ltr; text-align:left; overflow:auto; max-height:260px; font-size:.76rem}
+  details summary{cursor:pointer; color:var(--accent); font-size:.82rem}
+
+  .state{text-align:center; padding:56px 20px; color:var(--muted)}
+  .spinner{width:32px;height:32px;margin:0 auto 12px;border:3px solid var(--border);
+           border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.spinner{animation-duration:2s}}
+  .err{background:#2a1a1f;border:1px solid #7c2b3a;color:#ffb6c2;padding:16px;
+       border-radius:12px;max-width:760px;margin:24px auto}
+  .warnbar{position:relative; background:var(--chip); border:1px solid var(--warn);
+           color:var(--warn); padding:8px 12px; padding-inline-end:34px;
+           border-radius:10px; font-size:.8rem; margin-bottom:12px}
+  .closebar{position:absolute; inset-inline-end:6px; top:4px; background:none;
+            border:none; color:inherit; cursor:pointer; padding:2px 6px; font-size:.9rem}
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  @media (max-width:760px){
+    .specs{grid-template-columns:auto 1fr}
+    td.name-col,th.name-col{max-width:190px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>جدول مدل‌های چند‌ارائه‌دهنده</h1>
+    <p class="sub">Pollinations · OpenRouter · UnoRouter · Together AI · Groq · Google · AnyModel · Mistral AI ·
+      Bynara · TabiToken · TomDaCat — هر مدل به همراه ارائه‌دهنده‌اش نمایش داده می‌شود.
+      درخواست‌ها (به‌جز Pollinations که CORS را مستقیم پشتیبانی می‌کند) از طریق پروکسی CORS شما ارسال می‌شوند
+      (بخش «پروکسی CORS و کلید API» را ببینید).</p>
+
+    <div class="toolbar">
+      <label class="sr-only" for="q">جست‌وجو</label>
+      <input id="q" type="search" placeholder="جست‌وجو در نام، شناسه، برند، توضیح…" autocomplete="off">
+      <label class="sr-only" for="access">فیلتر دسترسی</label>
+      <select id="access">
+        <option value="">همه (رایگان و پولی)</option>
+        <option value="free">فقط رایگان</option>
+        <option value="paid">فقط پولی</option>
+      </select>
+      <button id="reload" type="button">بارگیری مجدد</button>
+      <button id="csv" type="button">خروجی CSV</button>
+      <button id="json" type="button">خروجی JSON</button>
+      <span class="sub" id="count" aria-live="polite"></span>
+    </div>
+
+    <div class="filters" id="pfilters"><span class="lbl">ارائه‌دهنده:</span></div>
+    <div class="filters" id="cfilters"><span class="lbl">دسته:</span></div>
+
+    <details class="settings">
+      <summary>پروکسی CORS و کلید API</summary>
+      <p class="keynote">اکثر این APIها از مرورگر مستقیم قابل دسترسی نیستند (CORS) و بعضی نیاز به کلید دارند.
+        درخواست هر منبع از طریق آدرس پروکسی زیر بازنویسی و ارسال می‌شود. کلیدها و تنظیمات پروکسی فقط در همین
+        مرورگر (<code>localStorage</code>) نگه‌داری می‌شوند و به جایی جز پروکسی/سرویس مقصد ارسال نمی‌شوند.</p>
+
+      <div class="keyrow"><label for="proxyUrl">آدرس پروکسی</label>
+        <input id="proxyUrl" type="text" placeholder="https://your-worker.workers.dev"></div>
+      <div class="keyrow"><label for="proxyTpl">الگوی پروکسی</label>
+        <select id="proxyTpl"></select></div>
+      <div class="keyrow" id="customTplRow" style="display:none">
+        <label for="proxyCustomTpl">قالب سفارشی</label>
+        <input id="proxyCustomTpl" type="text" placeholder="{proxy}/{url}"></div>
+      <div class="keyrow">
+        <label></label>
+        <label class="p-chk"><input type="checkbox" id="proxyEncode"> آدرس مقصد را قبل از جای‌گذاری encode کن</label>
+      </div>
+
+      <p class="keysub">فعال بودن هر منبع و کلید آن (برای Google، کلید به‌صورت پارامتر <code>key=</code>
+        ارسال می‌شود؛ برای بقیه به‌صورت هدر <code>Authorization: Bearer</code>):</p>
+      <div id="keyRows"></div>
+
+      <div class="keyrow">
+        <button id="savekeys" type="button">ذخیره و بارگیری مجدد</button>
+        <button id="clearkeys" type="button">پاک کردن همه کلیدها</button>
+        <span class="statusmsg" id="settingsMsg" aria-live="polite"></span>
+      </div>
+    </details>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="legend">
+    <span>روی هر سطر کلیک کنید تا مشخصات کامل و دادهٔ خام JSON باز شود.</span>
+    <span>قیمت‌ها به دلار آمریکا و به ازای هر ۱ میلیون توکن نمایش داده می‌شوند (در صورت اعلام توسط provider).</span>
+  </div>
+  <div id="out"><div class="state"><div class="spinner"></div>در حال دریافت مدل‌ها…</div></div>
+</main>
+
+<script>
+/* ================= تنظیمات =================
+   auth:"header" یعنی Authorization: Bearer <key>، auth:"query" یعنی کلید به‌صورت
+   پارامتر URL (مثل Google که از ?key= استفاده می‌کند). همه از طریق پروکسیِ
+   تنظیم‌شده در بخش «پروکسی CORS و کلید API» عبور می‌کنند. */
+const PROVIDERS = [
+  { key:"pollinations", label:"Pollinations",  url:"https://gen.pollinations.ai/models",
+    auth:"none",   needsKey:false, keyHint:"", direct:true },
+  { key:"openrouter", label:"OpenRouter",  url:"https://openrouter.ai/api/v1/models",
+    auth:"header", needsKey:false, keyHint:"sk-or-... (اختیاری)" },
+  { key:"unorouter",  label:"UnoRouter",   url:"https://api.unorouter.com/v1/models",
+    auth:"header", needsKey:true,  keyHint:"کلید UnoRouter" },
+  { key:"together",   label:"Together AI", url:"https://api.together.ai/v1/models",
+    auth:"header", needsKey:true,  keyHint:"کلید Together AI" },
+  { key:"groq",       label:"Groq",        url:"https://api.groq.com/openai/v1/models",
+    auth:"header", needsKey:true,  keyHint:"gsk_..." },
+  { key:"google",     label:"Google",      url:"https://generativelanguage.googleapis.com/v1beta/models",
+    auth:"query",  queryParam:"key", needsKey:true, keyHint:"AIza..." },
+  { key:"anymodel",   label:"AnyModel",    url:"https://anymodel.org/v1/models",
+    auth:"header", needsKey:false, keyHint:"... (اختیاری)" },
+  { key:"mistral",    label:"Mistral AI",  url:"https://api.mistral.ai/v1/models",
+    auth:"header", needsKey:true,  keyHint:"کلید Mistral" },
+  { key:"bynara",     label:"Bynara",      url:"https://router.bynara.id/v1/models",
+    auth:"header", needsKey:true,  keyHint:"کلید Bynara" },
+  { key:"tabitoken",  label:"TabiToken",   url:"https://tabitoken.com/v1/models",
+    auth:"header", needsKey:true,  keyHint:"کلید TabiToken" },
+  { key:"tomdacat",   label:"TomDaCat",    url:"https://ai.tomdacat.com/code/v1/models",
+    auth:"header", needsKey:true,  keyHint:"tdcc_..." }
+];
+
+const PROXY_TEMPLATES = [
+  { id:"path",    label:"{proxy}/{url} — مسیر مستقیم (رایج‌ترین حالت Worker)" },
+  { id:"query",   label:"{proxy}/?url={url} — پارامتر url=" },
+  { id:"proxied", label:"{proxy}/proxy/{url} — مسیر /proxy/" },
+  { id:"custom",  label:"سفارشی…" }
+];
+const TPL_STR = {
+  path:    "{proxy}/{url}",
+  query:   "{proxy}/?url={url}",
+  proxied: "{proxy}/proxy/{url}"
+};
+
+const CAT_LABELS = {
+  chat:"متن/چت", text:"متن/چت", image:"تصویر", video:"ویدیو", audio:"صدا", "3d":"سه‌بعدی",
+  embedding:"امبدینگ", rerank:"رتبه‌بندی", moderation:"مدیریت محتوا", other:"سایر"
+};
+const MOD_FA = { text:"متن", image:"تصویر", audio:"صدا", video:"ویدیو", file:"فایل", embedding:"امبدینگ" };
+
+const LABELS = {
+  id:"شناسه", name:"نام", display_name:"نام نمایشی", displayName:"نام نمایشی",
+  organization:"سازمان", owned_by:"مالک", object:"نوع شیء", created:"تاریخ ایجاد",
+  type:"نوع", context_length:"پنجره متن", context_window:"پنجره متن",
+  max_context_length:"حداکثر پنجره متن", inputTokenLimit:"حداکثر توکن ورودی",
+  outputTokenLimit:"حداکثر توکن خروجی", supportedGenerationMethods:"متدهای پشتیبانی‌شده",
+  hugging_face_id:"شناسه HuggingFace", canonical_slug:"شناسه یکتا", description:"توضیح",
+  license:"مجوز", link:"لینک", knowledge_cutoff:"تاریخ دانش", per_request_limits:"محدودیت هر درخواست",
+  supported_parameters:"پارامترهای پشتیبانی‌شده", default_parameters:"پارامترهای پیش‌فرض",
+  top_provider:"ارائه‌دهندهٔ برتر", architecture:"معماری", pricing:"قیمت‌گذاری", reasoning:"استدلال",
+  capabilities:"قابلیت‌ها", billing:"مدل صورتحساب", kind:"نوع مدل", active:"فعال",
+  public_apps:"اپ‌های عمومی", version:"نسخه", tomdacat_code:"اطلاعات TomDaCat",
+  deprecation:"تاریخ منسوخ‌شدن", aliases:"نام‌های مستعار",
+  input_modalities:"مودالیتی ورودی", output_modalities:"مودالیتی خروجی",
+  is_specialized:"تخصصی", max_reference_images:"حداکثر تصاویر مرجع",
+  added_date:"تاریخ افزودن", paid_only:"فقط پولی", currency:"واحد پول"
+};
+
+/* ================= کمکی‌ها ================= */
+const $ = id => document.getElementById(id);
+const out = $("out"), qEl = $("q"), accessEl = $("access"),
+      countEl = $("count"), pfiltersEl = $("pfilters"), cfiltersEl = $("cfilters");
+const proxyUrlEl = $("proxyUrl"), proxyTplEl = $("proxyTpl"), customTplRowEl = $("customTplRow"),
+      proxyCustomTplEl = $("proxyCustomTpl"), proxyEncodeEl = $("proxyEncode"),
+      keyRowsEl = $("keyRows"), settingsMsgEl = $("settingsMsg");
+
+let models = [];
+let activeProviders = new Set(PROVIDERS.map(p => p.key));
+let activeCats = new Set();
+let sort = { col:"name", dir:1 };
+
+const esc = s => String(s).replace(/[&<>"']/g, c =>
+  ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const faNum = n => Number(n).toLocaleString("fa-IR");
+const arr = v => Array.isArray(v) ? v : v == null ? [] : [v];
+
+function compact(n){
+  if (n == null || isNaN(n)) return "—";
+  n = Number(n);
+  if (n >= 1e6) return (n/1e6).toFixed(n % 1e6 ? 1 : 0) + "M";
+  if (n >= 1e3) return (n/1e3).toFixed(n % 1e3 ? 1 : 0) + "K";
+  return String(n);
+}
+function toMs(v){
+  if (v == null) return null;
+  const n = Number(v);
+  if (!isFinite(n) || n <= 0) return null;
+  return n < 1e12 ? n * 1000 : n;
+}
+function faDate(ms){
+  if (!ms) return "—";
+  try{ return new Date(Number(ms)).toLocaleDateString("fa-IR",
+    { year:"numeric", month:"2-digit", day:"2-digit" }); }
+  catch{ return "—" }
+}
+function priceStr(v){
+  if (v == null || isNaN(v)) return "—";
+  const n = Number(v);
+  if (n === 0) return "۰ (رایگان)";
+  return "$" + n.toLocaleString("en-US", { maximumFractionDigits: n < 1 ? 4 : 2 });
+}
+function fmt(v){
+  if (v == null || v === "") return "—";
+  if (typeof v === "boolean") return v ? "بله" : "خیر";
+  if (typeof v === "number") return faNum(v);
+  if (Array.isArray(v)) return v.length ? v.map(x =>
+    typeof x === "object" ? JSON.stringify(x) : String(x)).join("، ") : "—";
+  if (typeof v === "object") return JSON.stringify(v);
+  return String(v);
+}
+const boolCell = v => v === true ? `<span class="yes">✓</span>`
+                    : v === false ? `<span class="no">✗</span>`
+                    : `<span class="muted">—</span>`;
+
+/* رنگ ثابتِ هر ارائه‌دهنده — تصادفی نیست، از هش نام مشتق می‌شود تا برای هر
+   تعداد provider سازگار بماند بدون نیاز به تعریف رنگ به‌ازای هرکدام */
+function provColor(key){
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) % 360;
+  return `hsl(${h}, 62%, 50%)`;
+}
+
+/* ================= پروکسی CORS ================= */
+const PROXY_KEY = "provider_models_proxy_v1";
+const DEFAULT_PROXY = {
+  proxy:"https://ai-reverse.aialsabela.workers.dev",
+  template:"path", customTemplate:"{proxy}/{url}", encode:false
+};
+function loadProxySettings(){
+  try{
+    const raw = JSON.parse(localStorage.getItem(PROXY_KEY));
+    return raw ? { ...DEFAULT_PROXY, ...raw } : { ...DEFAULT_PROXY };
+  }catch{ return { ...DEFAULT_PROXY }; }
+}
+function saveProxySettings(s){ try{ localStorage.setItem(PROXY_KEY, JSON.stringify(s)); }catch{} }
+let proxySettings = loadProxySettings();
+
+function buildProxyUrl(target){
+  const proxy = (proxySettings.proxy || "").trim();
+  if (!proxy) return target;                         /* بدون پروکسی: تلاش مستقیم (احتمالاً CORS می‌خورد) */
+  const base = proxy.replace(/\/+$/, "");
+  const tpl = proxySettings.template === "custom"
+    ? (proxySettings.customTemplate || "{proxy}/{url}")
+    : (TPL_STR[proxySettings.template] || TPL_STR.path);
+  const urlPart = proxySettings.encode ? encodeURIComponent(target) : target;
+  return tpl.replace("{proxy}", base).replace("{url}", urlPart);
+}
+
+/* ================= کلید و فعال‌بودن هر منبع ================= */
+const KEY_STORE = "provider_models_api_keys_v2";
+function loadKeys(){
+  try{ return JSON.parse(localStorage.getItem(KEY_STORE)) || {}; }catch{ return {}; }
+}
+function saveKeys(obj){ try{ localStorage.setItem(KEY_STORE, JSON.stringify(obj)); }catch{} }
+function getKeyEntry(providerKey){
+  const st = loadKeys()[providerKey];
+  return { key:(st?.key || "").trim(), enabled: st?.enabled !== false };
+}
+
+function renderSettingsPanel(){
+  proxyUrlEl.value = proxySettings.proxy || "";
+  proxyTplEl.innerHTML = PROXY_TEMPLATES.map(t => `<option value="${t.id}">${esc(t.label)}</option>`).join("");
+  proxyTplEl.value = proxySettings.template;
+  customTplRowEl.style.display = proxySettings.template === "custom" ? "" : "none";
+  proxyCustomTplEl.value = proxySettings.customTemplate || "{proxy}/{url}";
+  proxyEncodeEl.checked = !!proxySettings.encode;
+
+  const keys = loadKeys();
+  keyRowsEl.innerHTML = PROVIDERS.map(p => {
+    const st = keys[p.key] || {};
+    return `<div class="keyrow" data-p="${esc(p.key)}">
+      <label class="p-chk"><input type="checkbox" class="p-enabled" ${st.enabled !== false ? "checked" : ""}>
+        ${esc(p.label)}${p.needsKey ? "" : " (کلید اختیاری)"}</label>
+      <input type="password" class="p-key" placeholder="${esc(p.keyHint || "API key")}"
+        value="${esc(st.key || "")}" autocomplete="off">
+    </div>`;
+  }).join("");
+}
+renderSettingsPanel();
+
+proxyTplEl.addEventListener("change", () => {
+  customTplRowEl.style.display = proxyTplEl.value === "custom" ? "" : "none";
+});
+
+$("savekeys").addEventListener("click", () => {
+  const obj = {};
+  keyRowsEl.querySelectorAll(".keyrow").forEach(row => {
+    obj[row.dataset.p] = {
+      key: row.querySelector(".p-key").value.trim(),
+      enabled: row.querySelector(".p-enabled").checked
+    };
+  });
+  saveKeys(obj);
+
+  proxySettings = {
+    proxy: proxyUrlEl.value.trim(),
+    template: proxyTplEl.value,
+    customTemplate: proxyCustomTplEl.value.trim() || "{proxy}/{url}",
+    encode: proxyEncodeEl.checked
+  };
+  saveProxySettings(proxySettings);
+
+  settingsMsgEl.textContent = "ذخیره شد؛ در حال بارگیری مجدد…";
+  load();
+});
+$("clearkeys").addEventListener("click", () => {
+  saveKeys({});
+  renderSettingsPanel();
+  settingsMsgEl.textContent = "کلیدها پاک شدند؛ در حال بارگیری مجدد…";
+  load();
+});
+
+/* ================= استخراج و نرمال‌سازی ================= */
+function extractList(data){
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === "object"){
+    for (const k of ["data","models","items","result"]) if (Array.isArray(data[k])) return data[k];
+  }
+  return [];
+}
+
+function guessBrand(id, fallback){
+  const s = String(id || "");
+  if (s.includes("/")) return s.split("/")[0];
+  return fallback || "";
+}
+
+/* برخی routerها (به‌خصوص OpenRouter و مشتقاتش مثل UnoRouter) با پسوند ":free"
+   در شناسه، مدل‌های رایگان را مشخص می‌کنند — مثلاً "…:free" */
+function isFreeId(id){ return /:free$/i.test(String(id || "")); }
+
+/* OpenRouter: pricing.prompt/completion به دلار به ازای هر توکن است */
+function normalizeOpenRouter(raw){
+  const arch = raw.architecture || {};
+  const inMods = arr(arch.input_modalities);
+  const outMods = arr(arch.output_modalities);
+  const p = raw.pricing || {};
+  const toPerM = v => (v == null || v === "" || Number(v) < 0) ? null : Number(v) * 1e6;
+  const priceIn = toPerM(p.prompt);
+  const priceOut = toPerM(p.completion);
+  const category = outMods.includes("image") ? "image"
+    : outMods.includes("audio") ? "audio"
+    : outMods.includes("video") ? "video"
+    : "chat";
+  return {
+    id: raw.id, name: raw.name || raw.id,
+    brand: guessBrand(raw.id, (raw.name || "").split(":")[0]),
+    category,
+    inMods: inMods.length ? inMods : ["text"], outMods: outMods.length ? outMods : ["text"],
+    ctx: raw.context_length ?? raw.top_provider?.context_length ?? null,
+    priceIn, priceOut,
+    free: isFreeId(raw.id) || (priceIn === 0 && priceOut === 0),
+    tools: arr(raw.supported_parameters).includes("tools"),
+    reasoning: !!(raw.reasoning && (raw.reasoning.mandatory || raw.reasoning.default_enabled)),
+    created: toMs(raw.created),
+    description: raw.description || "",
+    raw
+  };
+}
+
+/* Together AI: pricing.input/output از قبل به ازای هر ۱M توکن است */
+function normalizeTogether(raw){
+  const p = raw.pricing || {};
+  const type = String(raw.type || "").toLowerCase();
+  const category = type.includes("image") ? "image"
+    : type.includes("embed") ? "embedding"
+    : type.includes("audio") ? "audio"
+    : type.includes("rerank") ? "rerank"
+    : type.includes("moderat") ? "moderation"
+    : "chat";
+  const inMods = category === "image" ? ["text"]
+    : category === "embedding" ? ["text"]
+    : category === "audio" ? ["audio","text"]
+    : ["text"];
+  const outMods = category === "image" ? ["image"]
+    : category === "embedding" ? ["embedding"]
+    : category === "audio" ? ["audio","text"]
+    : ["text"];
+  const priceIn = p.input != null ? Number(p.input) : null;
+  const priceOut = p.output != null ? Number(p.output) : null;
+  return {
+    id: raw.id, name: raw.display_name || raw.id,
+    brand: raw.organization || guessBrand(raw.id, ""),
+    category, inMods, outMods,
+    ctx: raw.context_length ?? null,
+    priceIn, priceOut,
+    free: isFreeId(raw.id) || (priceIn === 0 && priceOut === 0),
+    tools: null, reasoning: null,
+    created: toMs(raw.created),
+    description: raw.license ? `مجوز: ${raw.license}` : "",
+    raw
+  };
+}
+
+/* UnoRouter: مسیرهای فیلد تأیید نشده — چند احتمال متداول را امتحان می‌کنیم */
+function normalizeUnoRouter(raw){
+  const arch = raw.architecture || {};
+  const inMods = arr(arch.input_modalities ?? raw.input_modalities);
+  const outMods = arr(arch.output_modalities ?? raw.output_modalities);
+  const p = raw.pricing || {};
+  let priceIn = null, priceOut = null;
+  if (p.prompt != null || p.completion != null){
+    /* مثل OpenRouter: دلار به ازای هر توکن */
+    priceIn = p.prompt != null ? Number(p.prompt) * 1e6 : null;
+    priceOut = p.completion != null ? Number(p.completion) * 1e6 : null;
+  } else if (p.input != null || p.output != null){
+    /* مثل Together: از قبل به ازای هر ۱M توکن */
+    priceIn = p.input != null ? Number(p.input) : null;
+    priceOut = p.output != null ? Number(p.output) : null;
+  }
+  const category = outMods.includes("image") ? "image"
+    : outMods.includes("audio") ? "audio"
+    : "chat";
+  return {
+    id: raw.id, name: raw.name || raw.id,
+    brand: raw.owned_by || raw.owner || raw.provider || guessBrand(raw.id, ""),
+    category,
+    inMods: inMods.length ? inMods : ["text"], outMods: outMods.length ? outMods : ["text"],
+    ctx: raw.context_length ?? raw.max_tokens ?? raw.context_window ?? null,
+    priceIn, priceOut,
+    free: isFreeId(raw.id) || (priceIn === 0 && priceOut === 0) || raw.free === true,
+    tools: arr(raw.supported_parameters).includes("tools") || null,
+    reasoning: raw.reasoning != null ? !!raw.reasoning : null,
+    created: toMs(raw.created),
+    description: raw.description || "",
+    raw
+  };
+}
+
+/* Pollinations: شِمای کامل و مستند — pricing به‌صورت دلار کسری به ازای هر توکن است */
+function normalizePollinations(raw){
+  const p = raw.pricing || {};
+  const toPerM = v => v == null ? null : Number(v) * 1e6;
+  const priceIn  = p.promptTextTokens     != null ? toPerM(p.promptTextTokens)     : null;
+  const priceOut = p.completionTextTokens != null ? toPerM(p.completionTextTokens) : null;
+  const inMods  = arr(raw.input_modalities).length  ? arr(raw.input_modalities)  : ["text"];
+  const outMods = arr(raw.output_modalities).length ? arr(raw.output_modalities) : ["text"];
+  const category = raw.category || (outMods.includes("image") ? "image"
+    : outMods.includes("audio") ? "audio"
+    : outMods.includes("video") ? "video"
+    : outMods.includes("embedding") ? "embedding"
+    : "chat");
+  return {
+    id: raw.name, name: raw.title || raw.name,
+    brand: raw.brand || "",
+    category, inMods, outMods,
+    ctx: raw.context_length ?? null,
+    priceIn, priceOut,
+    free: raw.paid_only === true ? false
+      : (raw.paid_only === false || isFreeId(raw.name) || (priceIn === 0 && priceOut === 0)),
+    tools: typeof raw.tools === "boolean" ? raw.tools : (arr(raw.capabilities).includes("tool_calling") || null),
+    reasoning: null,
+    created: toMs(raw.added_date),
+    description: raw.description || "",
+    raw
+  };
+}
+
+/* Groq: شِمای سازگار با OpenAI؛ قیمت‌گذاری در همین اندپوینت اعلام نمی‌شود */
+function normalizeGroq(raw){
+  const id = String(raw.id || "");
+  const isAudio = /whisper|tts|speech/i.test(id);
+  const category = isAudio ? "audio" : "chat";
+  const outAudio = /-tts/i.test(id);
+  return {
+    id: raw.id, name: raw.id,
+    brand: "Groq",
+    category,
+    inMods: isAudio ? ["audio"] : ["text"],
+    outMods: isAudio ? (outAudio ? ["audio"] : ["text"]) : ["text"],
+    ctx: raw.context_window ?? raw.context_length ?? null,
+    priceIn: null, priceOut: null,
+    free: isFreeId(id) || null,
+    tools: null, reasoning: null,
+    created: toMs(raw.created),
+    description: raw.active === false ? "غیرفعال" : "",
+    raw
+  };
+}
+
+/* Google Generative Language: name به‌صورت "models/gemini-..." است */
+function normalizeGoogle(raw){
+  const fullName = String(raw.name || "");
+  const id = fullName.replace(/^models\//, "");
+  const methods = arr(raw.supportedGenerationMethods).map(String);
+  const category = methods.includes("embedContent") ? "embedding"
+    : /imagen/i.test(id) ? "image"
+    : /veo/i.test(id) ? "video"
+    : "chat";
+  const outMods = category === "embedding" ? ["embedding"]
+    : category === "image" ? ["image"]
+    : category === "video" ? ["video"]
+    : ["text"];
+  return {
+    id, name: raw.displayName || id,
+    brand: "Google",
+    category, inMods:["text"], outMods,
+    ctx: raw.inputTokenLimit ?? null,
+    priceIn: null, priceOut: null,
+    free: isFreeId(id) || null,
+    tools: null, reasoning: null,
+    created: null,
+    description: raw.description || "",
+    raw
+  };
+}
+
+/* AnyModel: قیمت‌گذاری ضریبی (billing.coefficient) است، نه دلاری مستقیم */
+function normalizeAnyModel(raw){
+  const category = raw.kind === "image" ? "image" : "chat";
+  return {
+    id: raw.id, name: raw.id,
+    brand: guessBrand(raw.id, "AnyModel"),
+    category,
+    inMods: ["text"],
+    outMods: category === "image" ? ["image"] : ["text"],
+    ctx: null,
+    priceIn: null, priceOut: null,
+    free: isFreeId(raw.id) || null,
+    tools: null, reasoning: null,
+    created: null,
+    description: raw.billing ? "قیمت‌گذاری ضریبی — جزئیات در دادهٔ خام" : "",
+    raw
+  };
+}
+
+/* Mistral AI: شِمای سازگار با OpenAI؛ قیمت‌گذاری در همین اندپوینت اعلام نمی‌شود */
+function normalizeMistral(raw){
+  const cap = raw.capabilities || {};
+  return {
+    id: raw.id, name: raw.name || raw.id,
+    brand: "Mistral AI",
+    category: "chat",
+    inMods: cap.vision ? ["text","image"] : ["text"],
+    outMods: ["text"],
+    ctx: raw.max_context_length ?? null,
+    priceIn: null, priceOut: null,
+    free: isFreeId(raw.id) || null,
+    tools: cap.function_calling === true || null,
+    reasoning: null,
+    created: toMs(raw.created),
+    description: raw.description || "",
+    raw
+  };
+}
+
+/* TomDaCat Code: capabilities شامل tools/vision؛ tomdacat_code.premium سهمیهٔ جدا دارد */
+function normalizeTomdacat(raw){
+  const caps = arr(raw.capabilities).map(String);
+  return {
+    id: raw.id, name: raw.id,
+    brand: "TomDaCat",
+    category: "chat",
+    inMods: caps.includes("vision") ? ["text","image"] : ["text"],
+    outMods: ["text"],
+    ctx: null,
+    priceIn: null, priceOut: null,
+    free: isFreeId(raw.id) || null,
+    tools: caps.some(c => /tool|function/i.test(c)) || null,
+    reasoning: null,
+    created: toMs(raw.created),
+    description: raw.tomdacat_code?.premium ? "پرمیوم — در سهمیهٔ هفتگی جداگانه محاسبه می‌شود" : "",
+    raw
+  };
+}
+
+/* شِمای ناشناخته (Bynara، TabiToken): حدس محتاطانه بر پایهٔ الگوی رایج OpenAI-compatible */
+function normalizeGeneric(raw, brandFallback){
+  return {
+    id: raw.id || raw.name, name: raw.name || raw.id,
+    brand: raw.owned_by || raw.owner || raw.organization || guessBrand(raw.id, brandFallback),
+    category: "chat",
+    inMods: ["text"], outMods: ["text"],
+    ctx: raw.context_length ?? raw.max_tokens ?? raw.context_window ?? null,
+    priceIn: null, priceOut: null,
+    free: isFreeId(raw.id || raw.name) || null,
+    tools: null, reasoning: null,
+    created: toMs(raw.created),
+    description: raw.description || "",
+    raw
+  };
+}
+
+const NORMALIZERS = {
+  pollinations: normalizePollinations,
+  openrouter: normalizeOpenRouter,
+  together:   normalizeTogether,
+  unorouter:  normalizeUnoRouter,
+  groq:       normalizeGroq,
+  google:     normalizeGoogle,
+  anymodel:   normalizeAnyModel,
+  mistral:    normalizeMistral,
+  tomdacat:   normalizeTomdacat,
+  bynara:     raw => normalizeGeneric(raw, "Bynara"),
+  tabitoken:  raw => normalizeGeneric(raw, "TabiToken")
+};
+
+async function fetchProvider(p){
+  const { key } = getKeyEntry(p.key);
+  const headers = { Accept:"application/json" };
+  let target = p.url;
+  if (key){
+    if (p.auth === "query")
+      target += (target.includes("?") ? "&" : "?") + `${p.queryParam}=${encodeURIComponent(key)}`;
+    else
+      headers.Authorization = `Bearer ${key}`;
+  }
+  const finalUrl = p.direct ? target : buildProxyUrl(target);
+
+  let res;
+  try{
+    res = await fetch(finalUrl, { headers });
+  }catch{
+    throw Object.assign(new Error(`${p.label}: دسترسی ممکن نشد (پروکسی/شبکه) — ${finalUrl}`),
+      { key:p.key, label:p.label, url:finalUrl, kind:"network" });
+  }
+
+  const text = await res.text();
+  if (!res.ok){
+    const kind = (res.status === 401 || res.status === 403) ? "auth" : "http";
+    throw Object.assign(new Error(`${p.label}: خطای ${res.status} ${res.statusText}` +
+      (kind === "auth" ? " — احتمالاً به کلید API نیاز دارد" : "") +
+      (text ? ` — ${text.slice(0,120)}` : "")),
+      { key:p.key, label:p.label, url:finalUrl, kind, status:res.status });
+  }
+
+  let data;
+  try{ data = JSON.parse(text); }
+  catch{
+    throw Object.assign(new Error(`${p.label}: پاسخ JSON معتبر نبود — ${text.slice(0,120)}`),
+      { key:p.key, label:p.label, url:finalUrl, kind:"parse" });
+  }
+  const norm = NORMALIZERS[p.key];
+  return extractList(data).map(raw => ({ ...norm(raw), provider:p.key, providerLabel:p.label }));
+}
+
+/* ================= بارگیری ================= */
+async function load(){
+  out.innerHTML = `<div class="state"><div class="spinner"></div>در حال دریافت مدل‌ها…</div>`;
+  countEl.textContent = "";
+
+  const active = PROVIDERS.filter(p => getKeyEntry(p.key).enabled);
+  const results = await Promise.allSettled(active.map(fetchProvider));
+  const ok = results.filter(r => r.status === "fulfilled").flatMap(r => r.value);
+  const errs = results.filter(r => r.status === "rejected").map(r => r.reason);
+
+  if (!ok.length){
+    out.innerHTML = `<div class="err" role="alert">
+      <strong>دریافت داده‌ها ناموفق بود.</strong>
+      <p>${errs.map(e => esc(e.message)).join("<br>") || "پاسخی دریافت نشد."}</p>
+      <p>اگر خطا از نوع CORS یا شبکه است، آدرس/الگوی پروکسی را در «پروکسی CORS و کلید API» بررسی کنید.
+      اگر خطا ۴۰۱/۴۰۳ است، کلید API مربوطه را همان‌جا وارد کنید.</p>
+    </div>`;
+    return;
+  }
+
+  models = ok.map((m, i) => ({ ...m, index:i }));
+  buildFilters();
+  render();
+
+  if (errs.length){
+    const bar = document.createElement("div");
+    bar.className = "warnbar";
+    bar.innerHTML = `<button type="button" class="closebar" aria-label="بستن">✕</button>
+      برخی منابع پاسخ ندادند و مدل‌های آن‌ها در جدول نیستند:<br>
+      ${errs.map(e => `<span>${esc(e.message)}</span>`).join("<br>")}`;
+    bar.querySelector(".closebar").addEventListener("click", () => bar.remove());
+    out.prepend(bar);
+  }
+}
+
+/* ================= فیلترها ================= */
+function buildFilters(){
+  pfiltersEl.querySelectorAll(".f").forEach(b => b.remove());
+  cfiltersEl.querySelectorAll(".f").forEach(b => b.remove());
+
+  PROVIDERS.forEach(p => {
+    const count = models.filter(m => m.provider === p.key).length;
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "f prov"; b.dataset.p = p.key;
+    b.style.setProperty("--pc", provColor(p.key));
+    b.setAttribute("aria-pressed", String(activeProviders.has(p.key)));
+    b.textContent = `${p.label} (${faNum(count)})`;
+    b.disabled = count === 0;
+    b.addEventListener("click", () => {
+      activeProviders.has(p.key) ? activeProviders.delete(p.key) : activeProviders.add(p.key);
+      b.setAttribute("aria-pressed", String(activeProviders.has(p.key)));
+      render();
+    });
+    pfiltersEl.appendChild(b);
+  });
+
+  const cats = [...new Set(models.map(m => m.category))];
+  cats.forEach(c => {
+    const count = models.filter(m => m.category === c).length;
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "f"; b.dataset.cat = c;
+    b.setAttribute("aria-pressed", String(activeCats.has(c)));
+    b.textContent = `${CAT_LABELS[c] || c} (${faNum(count)})`;
+    b.addEventListener("click", () => {
+      activeCats.has(c) ? activeCats.delete(c) : activeCats.add(c);
+      b.setAttribute("aria-pressed", String(activeCats.has(c)));
+      render();
+    });
+    cfiltersEl.appendChild(b);
+  });
+  const clear = document.createElement("button");
+  clear.type = "button"; clear.className = "f";
+  clear.textContent = "پاک کردن فیلترها";
+  clear.addEventListener("click", () => {
+    activeCats.clear();
+    qEl.value = ""; accessEl.value = "";
+    cfiltersEl.querySelectorAll("[data-cat]").forEach(b => b.setAttribute("aria-pressed","false"));
+    render();
+  });
+  cfiltersEl.appendChild(clear);
+}
+
+/* ================= مرتب‌سازی و فیلتر ================= */
+function visible(){
+  const q = qEl.value.trim().toLowerCase();
+  const acc = accessEl.value;
+  let list = models.filter(m => {
+    if (!activeProviders.has(m.provider)) return false;
+    if (activeCats.size && !activeCats.has(m.category)) return false;
+    if (acc === "free" && !m.free) return false;
+    if (acc === "paid" && m.free) return false;
+    if (q){
+      const hay = `${m.id} ${m.name} ${m.brand} ${m.description}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  const { col, dir } = sort;
+  const val = m =>
+    col === "name" ? m.name.toLowerCase()
+    : col === "brand" ? (m.brand || "").toLowerCase()
+    : col === "provider" ? m.providerLabel
+    : col === "category" ? (CAT_LABELS[m.category] || m.category)
+    : col === "ctx" ? (m.ctx ?? -1)
+    : col === "priceIn" ? (m.priceIn ?? -1)
+    : col === "priceOut" ? (m.priceOut ?? -1)
+    : col === "free" ? (m.free ? 1 : 0)
+    : col === "created" ? (m.created ?? 0)
+    : m.index;
+
+  list.sort((a,b) => {
+    const x = val(a), y = val(b);
+    const r = typeof x === "string" ? x.localeCompare(y) : x - y;
+    return (r || a.name.localeCompare(b.name)) * dir;
+  });
+  return list;
+}
+
+/* ================= رندر ================= */
+const COL_COUNT = 9;
+
+function render(){
+  const list = visible();
+  countEl.textContent = `${faNum(list.length)} از ${faNum(models.length)} مدل`;
+
+  const arrowOf = k => sort.col === k ? (sort.dir === 1 ? " ▲" : " ▼") : "";
+  const th = (k, label, sub, cls = "") =>
+    `<th class="sortable ${cls}" data-sort="${k}">${esc(label)}${arrowOf(k)}
+       ${sub ? `<span class="cat">${esc(sub)}</span>` : ""}</th>`;
+
+  const head = `<tr>
+    ${th("name","مدل","نام و شناسه","name-col")}
+    ${th("provider","ارائه‌دهنده","")}
+    ${th("category","دسته","")}
+    <th>ورودی → خروجی</th>
+    ${th("ctx","پنجره متن","توکن")}
+    ${th("priceIn","قیمت ورودی","$/1M توکن")}
+    ${th("priceOut","قیمت خروجی","$/1M توکن")}
+    ${th("free","رایگان","")}
+    ${th("created","تاریخ ایجاد","")}
+  </tr>`;
+
+  const body = list.map(m => `<tr class="row" data-id="${esc(m.provider + '::' + m.id)}" tabindex="0">
+      <td class="name-col">
+        <span class="mtitle">${esc(m.name)}</span>
+        <span class="mid">${esc(m.id)}</span>
+      </td>
+      <td><span class="badge" style="background:${provColor(m.provider)}">${esc(m.providerLabel)}</span></td>
+      <td class="muted">${esc(CAT_LABELS[m.category] || m.category)}</td>
+      <td class="mods">${esc(m.inMods.map(x => MOD_FA[x] || x).join("+"))} → ${esc(m.outMods.map(x => MOD_FA[x] || x).join("+"))}</td>
+      <td title="${m.ctx ? faNum(m.ctx) + ' توکن' : ''}">${compact(m.ctx)}</td>
+      <td class="price">${priceStr(m.priceIn)}</td>
+      <td class="price">${priceStr(m.priceOut)}</td>
+      <td>${boolCell(m.free)}</td>
+      <td class="muted">${esc(faDate(m.created))}</td>
+    </tr>`).join("");
+
+  out.innerHTML = list.length ? `
+    <div class="tablebox">
+      <table>
+        <thead>${head}</thead>
+        <tbody>${body}</tbody>
+      </table>
+    </div>` : `<div class="state">هیچ مدلی با این فیلترها پیدا نشد. اگر تعداد مدل‌های یک ارائه‌دهنده صفر است،
+      شاید به کلید API نیاز داشته باشد (بخش «کلید API» را ببینید).</div>`;
+}
+
+/* ================= سطر جزئیات ================= */
+function toggleDetail(row){
+  const next = row.nextElementSibling;
+  if (next?.classList.contains("detail")){ next.remove(); return; }
+  out.querySelectorAll("tr.detail").forEach(el => el.remove());
+
+  const [provider, id] = row.dataset.id.split("::");
+  const m = models.find(x => x.provider === provider && x.id === id);
+  if (!m) return;
+
+  const skip = new Set(["id","name","display_name"]);
+  const specs = Object.entries(m.raw)
+    .filter(([k]) => !skip.has(k))
+    .map(([k,v]) => `<dt>${esc(LABELS[k] ?? k)}</dt><dd>${
+        k === "created" ? esc(faDate(toMs(v))) : esc(fmt(v))}</dd>`)
+    .join("");
+
+  const tr = document.createElement("tr");
+  tr.className = "detail";
+  tr.innerHTML = `<td colspan="${COL_COUNT}">
+    <div class="sub" style="margin-bottom:10px">
+      <span class="badge" style="background:${provColor(m.provider)}">${esc(m.providerLabel)}</span>
+      ${m.description ? " — " + esc(m.description) : ""}
+    </div>
+    ${specs ? `<dl class="specs">${specs}</dl>` : ""}
+    <details><summary>داده‌ی خام JSON</summary><pre>${esc(JSON.stringify(m.raw, null, 2))}</pre></details>
+  </td>`;
+  row.after(tr);
+}
+
+/* ================= خروجی‌ها ================= */
+function download(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const a = Object.assign(document.createElement("a"), { href:url, download:filename });
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function toCSV(){
+  const rows = [[
+    "provider","id","name","brand","category","input_modalities","output_modalities",
+    "context_length","price_in_per_1M_usd","price_out_per_1M_usd","free","created_date"
+  ]];
+  visible().forEach(m => rows.push([
+    m.providerLabel, m.id, m.name, m.brand, m.category,
+    m.inMods.join("|"), m.outMods.join("|"),
+    m.ctx ?? "", m.priceIn ?? "", m.priceOut ?? "", m.free ? "yes" : "no",
+    m.created ? new Date(m.created).toISOString().slice(0,10) : ""
+  ]));
+  const csv = "\uFEFF" + rows
+    .map(r => r.map(v => `"${String(v ?? "").replace(/"/g,'""')}"`).join(","))
+    .join("\r\n");
+  download(new Blob([csv], { type:"text/csv;charset=utf-8" }), "provider-models.csv");
+}
+
+function toJSON(){
+  const data = visible().map(m => ({
+    provider: m.providerLabel, id: m.id, name: m.name, brand: m.brand, category: m.category,
+    input_modalities: m.inMods, output_modalities: m.outMods,
+    context_length: m.ctx, price_in_per_1M_usd: m.priceIn, price_out_per_1M_usd: m.priceOut,
+    free: m.free, created: m.created ? new Date(m.created).toISOString() : null,
+    description: m.description
+  }));
+  download(new Blob([JSON.stringify(data, null, 2)], { type:"application/json;charset=utf-8" }),
+    "provider-models.json");
+}
+
+/* ================= رویدادها ================= */
+let debounce;
+qEl.addEventListener("input", () => { clearTimeout(debounce); debounce = setTimeout(render, 150); });
+accessEl.addEventListener("change", render);
+$("reload").addEventListener("click", load);
+$("csv").addEventListener("click", toCSV);
+$("json").addEventListener("click", toJSON);
+
+out.addEventListener("click", e => {
+  const head = e.target.closest("th[data-sort]");
+  if (head){
+    const col = head.dataset.sort;
+    const asc = ["name","brand","provider","category"].includes(col);
+    sort = { col, dir: sort.col === col ? -sort.dir : (asc ? 1 : -1) };
+    render();
+    return;
+  }
+  const row = e.target.closest("tr.row");
+  if (row) toggleDetail(row);
+});
+out.addEventListener("keydown", e => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  const row = e.target.closest("tr.row");
+  if (row){ e.preventDefault(); toggleDetail(row); }
+});
+
+load();
+</script>
+</body>
+</html>
