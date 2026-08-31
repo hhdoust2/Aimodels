@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>جدول مدل‌های چند‌ارائه‌دهنده (OpenRouter، UnoRouter، Together AI و ۷ منبع دیگر)</title>
+<title>جدول مدل‌های چند‌ارائه‌دهنده (Pollinations، OpenRouter، Together AI و ۸ منبع دیگر)</title>
 <style>
   :root{
     --bg:#0d0f15; --panel:#161a23; --row:#12151d; --row-alt:#161a23; --row-hover:#1e2431;
@@ -938,32 +938,20 @@ function download(blob, filename){
 }
 
 function toCSV(){
-  const rows = [[
-    "provider","id","name","brand","category","input_modalities","output_modalities",
-    "context_length","price_in_per_1M_usd","price_out_per_1M_usd","free","created_date"
-  ]];
-  visible().forEach(m => rows.push([
-    m.providerLabel, m.id, m.name, m.brand, m.category,
-    m.inMods.join("|"), m.outMods.join("|"),
-    m.ctx ?? "", m.priceIn ?? "", m.priceOut ?? "", m.free ? "yes" : "no",
-    m.created ? new Date(m.created).toISOString().slice(0,10) : ""
-  ]));
+  const rows = [["نام مدل", "شناسه (ID)", "ارائه‌دهنده"]];
+  visible().forEach(m => rows.push([m.name, m.id, m.providerLabel]));
   const csv = "\uFEFF" + rows
     .map(r => r.map(v => `"${String(v ?? "").replace(/"/g,'""')}"`).join(","))
     .join("\r\n");
-  download(new Blob([csv], { type:"text/csv;charset=utf-8" }), "provider-models.csv");
+  download(new Blob([csv], { type:"text/csv;charset=utf-8" }), "model-name-id-provider.csv");
 }
 
 function toJSON(){
   const data = visible().map(m => ({
-    provider: m.providerLabel, id: m.id, name: m.name, brand: m.brand, category: m.category,
-    input_modalities: m.inMods, output_modalities: m.outMods,
-    context_length: m.ctx, price_in_per_1M_usd: m.priceIn, price_out_per_1M_usd: m.priceOut,
-    free: m.free, created: m.created ? new Date(m.created).toISOString() : null,
-    description: m.description
+    name: m.name, id: m.id, provider: m.providerLabel
   }));
   download(new Blob([JSON.stringify(data, null, 2)], { type:"application/json;charset=utf-8" }),
-    "provider-models.json");
+    "model-name-id-provider.json");
 }
 
 /* ================= رویدادها ================= */
