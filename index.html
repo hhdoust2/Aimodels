@@ -948,7 +948,7 @@ function toCSV(){
 
 function toJSON(){
   const data = visible().map(m => ({
-    name: m.name, id: m.id, provider: m.providerLabel
+  id: m.id, provider: m.providerLabel
   }));
   download(new Blob([JSON.stringify(data, null, 2)], { type:"application/json;charset=utf-8" }),
     "model-name-id-provider.json");
