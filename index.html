@@ -938,8 +938,8 @@ function download(blob, filename){
 }
 
 function toCSV(){
-  const rows = [["نام مدل", "شناسه (ID)", "ارائه‌دهنده"]];
-  visible().forEach(m => rows.push([m.name, m.id, m.providerLabel]));
+  const rows = [[ "شناسه (ID)", "ارائه‌دهنده"]];
+  visible().forEach(m => rows.push([ m.id, m.providerLabel]));
   const csv = "\uFEFF" + rows
     .map(r => r.map(v => `"${String(v ?? "").replace(/"/g,'""')}"`).join(","))
     .join("\r\n");
@@ -948,7 +948,7 @@ function toCSV(){
 
 function toJSON(){
   const data = visible().map(m => ({
-    name: m.name, id: m.id, provider: m.providerLabel
+    name:  id: m.id, provider: m.providerLabel
   }));
   download(new Blob([JSON.stringify(data, null, 2)], { type:"application/json;charset=utf-8" }),
     "model-name-id-provider.json");
