@@ -213,8 +213,8 @@ const PROVIDERS = [
     auth:"header", needsKey:true,  keyHint:"کلید Bynara" },
   { key:"tabitoken",  label:"TabiToken",   url:"https://tabitoken.com/v1/models",
     auth:"header", needsKey:true,  keyHint:"کلید TabiToken" },
-  { key:"tomdacat",   label:"TomDaCat",    url:"https://ai.tomdacat.com/code/v1/models",
-    auth:"header", needsKey:true,  keyHint:"tdcc_..." }
+  { key:"tomdacat",   label:"TomDaCat",    url:"https://ai.tomdacat.com/api/models",
+    auth:"header", needsKey:false, keyHint:"tdcc_... (اختیاری)" }
 ];
 
 const PROXY_TEMPLATES = [
@@ -424,7 +424,9 @@ function guessBrand(id, fallback){
 
 /* برخی routerها (به‌خصوص OpenRouter و مشتقاتش مثل UnoRouter) با پسوند ":free"
    در شناسه، مدل‌های رایگان را مشخص می‌کنند — مثلاً "…:free" */
-function isFreeId(id){ return /:free$/i.test(String(id || "")); }
+/* برخی routerها با پسوند ":free" (مثل OpenRouter) و برخی با "-free" (مثل بعضی
+   مدل‌های DeepSeek روی routerهای دیگر) رایگان‌بودن را در id مشخص می‌کنند */
+function isFreeId(id){ return /[:\-]free$/i.test(String(id || "")); }
 
 /* OpenRouter: pricing.prompt/completion به دلار به ازای هر توکن است */
 function normalizeOpenRouter(raw){
@@ -641,9 +643,14 @@ function normalizeMistral(raw){
   };
 }
 
-/* TomDaCat Code: capabilities شامل tools/vision؛ tomdacat_code.premium سهمیهٔ جدا دارد */
+/* TomDaCat: capabilities شامل tools/vision؛ رایگان/پولی بودن از pricing.paid_only می‌آید
+   (نه از پسوند ":free" در id — TomDaCat آن قرارداد را استفاده نمی‌کند) */
 function normalizeTomdacat(raw){
   const caps = arr(raw.capabilities).map(String);
+  const p = raw.pricing || {};
+  const free = p.paid_only === false ? true
+    : p.paid_only === true ? false
+    : (isFreeId(raw.id) || null);
   return {
     id: raw.id, name: raw.id,
     brand: "TomDaCat",
@@ -652,7 +659,7 @@ function normalizeTomdacat(raw){
     outMods: ["text"],
     ctx: null,
     priceIn: null, priceOut: null,
-    free: isFreeId(raw.id) || null,
+    free,
     tools: caps.some(c => /tool|function/i.test(c)) || null,
     reasoning: null,
     created: toMs(raw.created),
@@ -671,7 +678,7 @@ function normalizeGeneric(raw, brandFallback){
     ctx: raw.context_length ?? raw.max_tokens ?? raw.context_window ?? null,
     priceIn: null, priceOut: null,
     free: isFreeId(raw.id || raw.name) || null,
-    tools: null, reasoning: null,
+    tools: null, reasoning: raw.reasoning != null ? !!raw.reasoning : null,
     created: toMs(raw.created),
     description: raw.description || "",
     raw
