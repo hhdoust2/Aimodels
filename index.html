@@ -191,18 +191,14 @@
    پارامتر URL (مثل Google که از ?key= استفاده می‌کند). همه از طریق پروکسیِ
    تنظیم‌شده در بخش «پروکسی CORS و کلید API» عبور می‌کنند. */
 const PROVIDERS = [
-  { key:"pollinations", label:"Pollinations",  url:"https://gen.pollinations.ai/models",
-    auth:"none",   needsKey:false, keyHint:"", direct:true },
   { key:"openrouter", label:"OpenRouter",  url:"https://openrouter.ai/api/v1/models",
     auth:"header", needsKey:false, keyHint:"sk-or-... (اختیاری)" },
-  { key:"unorouter",  label:"UnoRouter",   url:"https://api.unorouter.com/v1/models",
-    auth:"header", needsKey:true,  keyHint:"کلید UnoRouter" },
-  { key:"together",   label:"Together AI", url:"https://api.together.ai/v1/models",
-    auth:"header", needsKey:true,  keyHint:"کلید Together AI" },
   { key:"groq",       label:"Groq",        url:"https://api.groq.com/openai/v1/models",
     auth:"header", needsKey:true,  keyHint:"gsk_..." },
   { key:"google",     label:"Google",      url:"https://generativelanguage.googleapis.com/v1beta/models",
     auth:"query",  queryParam:"key", needsKey:true, keyHint:"AIza..." },
+      { key:"unorouter",  label:"UnoRouter",   url:"https://api.unorouter.com/v1/models",
+    auth:"header", needsKey:true,  keyHint:"کلید UnoRouter" },
   { key:"anymodel",   label:"AnyModel",    url:"https://anymodel.org/v1/models",
     auth:"header", needsKey:false, keyHint:"... (اختیاری)" },
   { key:"mistral",    label:"Mistral AI",  url:"https://api.mistral.ai/v1/models",
@@ -455,40 +451,6 @@ function normalizeOpenRouter(raw){
   };
 }
 
-/* Together AI: pricing.input/output از قبل به ازای هر ۱M توکن است */
-function normalizeTogether(raw){
-  const p = raw.pricing || {};
-  const type = String(raw.type || "").toLowerCase();
-  const category = type.includes("image") ? "image"
-    : type.includes("embed") ? "embedding"
-    : type.includes("audio") ? "audio"
-    : type.includes("rerank") ? "rerank"
-    : type.includes("moderat") ? "moderation"
-    : "chat";
-  const inMods = category === "image" ? ["text"]
-    : category === "embedding" ? ["text"]
-    : category === "audio" ? ["audio","text"]
-    : ["text"];
-  const outMods = category === "image" ? ["image"]
-    : category === "embedding" ? ["embedding"]
-    : category === "audio" ? ["audio","text"]
-    : ["text"];
-  const priceIn = p.input != null ? Number(p.input) : null;
-  const priceOut = p.output != null ? Number(p.output) : null;
-  return {
-    id: raw.id, name: raw.display_name || raw.id,
-    brand: raw.organization || guessBrand(raw.id, ""),
-    category, inMods, outMods,
-    ctx: raw.context_length ?? null,
-    priceIn, priceOut,
-    free: isFreeId(raw.id) || (priceIn === 0 && priceOut === 0),
-    tools: null, reasoning: null,
-    created: toMs(raw.created),
-    description: raw.license ? `مجوز: ${raw.license}` : "",
-    raw
-  };
-}
-
 /* UnoRouter: مسیرهای فیلد تأیید نشده — چند احتمال متداول را امتحان می‌کنیم */
 function normalizeUnoRouter(raw){
   const arch = raw.architecture || {};
@@ -519,35 +481,6 @@ function normalizeUnoRouter(raw){
     tools: arr(raw.supported_parameters).includes("tools") || null,
     reasoning: raw.reasoning != null ? !!raw.reasoning : null,
     created: toMs(raw.created),
-    description: raw.description || "",
-    raw
-  };
-}
-
-/* Pollinations: شِمای کامل و مستند — pricing به‌صورت دلار کسری به ازای هر توکن است */
-function normalizePollinations(raw){
-  const p = raw.pricing || {};
-  const toPerM = v => v == null ? null : Number(v) * 1e6;
-  const priceIn  = p.promptTextTokens     != null ? toPerM(p.promptTextTokens)     : null;
-  const priceOut = p.completionTextTokens != null ? toPerM(p.completionTextTokens) : null;
-  const inMods  = arr(raw.input_modalities).length  ? arr(raw.input_modalities)  : ["text"];
-  const outMods = arr(raw.output_modalities).length ? arr(raw.output_modalities) : ["text"];
-  const category = raw.category || (outMods.includes("image") ? "image"
-    : outMods.includes("audio") ? "audio"
-    : outMods.includes("video") ? "video"
-    : outMods.includes("embedding") ? "embedding"
-    : "chat");
-  return {
-    id: raw.name, name: raw.title || raw.name,
-    brand: raw.brand || "",
-    category, inMods, outMods,
-    ctx: raw.context_length ?? null,
-    priceIn, priceOut,
-    free: raw.paid_only === true ? false
-      : (raw.paid_only === false || isFreeId(raw.name) || (priceIn === 0 && priceOut === 0)),
-    tools: typeof raw.tools === "boolean" ? raw.tools : (arr(raw.capabilities).includes("tool_calling") || null),
-    reasoning: null,
-    created: toMs(raw.added_date),
     description: raw.description || "",
     raw
   };
