@@ -193,12 +193,12 @@
 const PROVIDERS = [
   { key:"openrouter", label:"OpenRouter",  url:"https://openrouter.ai/api/v1/models",
     auth:"header", needsKey:false, keyHint:"sk-or-... (اختیاری)" },
+  { key:"unorouter",  label:"UnoRouter",   url:"https://api.unorouter.com/v1/models",
+    auth:"header", needsKey:true,  keyHint:"کلید UnoRouter" },
   { key:"groq",       label:"Groq",        url:"https://api.groq.com/openai/v1/models",
     auth:"header", needsKey:true,  keyHint:"gsk_..." },
   { key:"google",     label:"Google",      url:"https://generativelanguage.googleapis.com/v1beta/models",
     auth:"query",  queryParam:"key", needsKey:true, keyHint:"AIza..." },
-      { key:"unorouter",  label:"UnoRouter",   url:"https://api.unorouter.com/v1/models",
-    auth:"header", needsKey:true,  keyHint:"کلید UnoRouter" },
   { key:"anymodel",   label:"AnyModel",    url:"https://anymodel.org/v1/models",
     auth:"header", needsKey:false, keyHint:"... (اختیاری)" },
   { key:"mistral",    label:"Mistral AI",  url:"https://api.mistral.ai/v1/models",
@@ -314,7 +314,7 @@ function provColor(key){
 /* ================= پروکسی CORS ================= */
 const PROXY_KEY = "provider_models_proxy_v1";
 const DEFAULT_PROXY = {
-  proxy:"https://ai-reverse.aialsabela.workers.dev",
+  proxy:" ",
   template:"path", customTemplate:"{proxy}/{url}", encode:false
 };
 function loadProxySettings(){
@@ -451,6 +451,8 @@ function normalizeOpenRouter(raw){
   };
 }
 
+
+
 /* UnoRouter: مسیرهای فیلد تأیید نشده — چند احتمال متداول را امتحان می‌کنیم */
 function normalizeUnoRouter(raw){
   const arch = raw.architecture || {};
@@ -485,6 +487,8 @@ function normalizeUnoRouter(raw){
     raw
   };
 }
+
+
 
 /* Groq: شِمای سازگار با OpenAI؛ قیمت‌گذاری در همین اندپوینت اعلام نمی‌شود */
 function normalizeGroq(raw){
@@ -617,9 +621,7 @@ function normalizeGeneric(raw, brandFallback){
 }
 
 const NORMALIZERS = {
-  pollinations: normalizePollinations,
   openrouter: normalizeOpenRouter,
-  together:   normalizeTogether,
   unorouter:  normalizeUnoRouter,
   groq:       normalizeGroq,
   google:     normalizeGoogle,
