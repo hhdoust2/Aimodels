@@ -844,7 +844,7 @@ function render(){
       </td>
       <td><span class="badge" style="background:${provColor(m.provider)}">${esc(m.providerLabel)}</span></td>
       <td class="muted">${esc(CAT_LABELS[m.category] || m.category)}</td>
-      <td class="mods">${esc(m.inMods.map(x => MOD_FA[x] || x).join("+"))} → ${esc(m.outMods.map(x => MOD_FA[x] || x).join("+"))}</td>
+      <td class="mods">${esc(m.inMods.map(x => MOD_FA[x] || x).join("+"))} ⬅️ ${esc(m.outMods.map(x => MOD_FA[x] || x).join("+"))}</td>
       <td title="${m.ctx ? faNum(m.ctx) + ' توکن' : ''}">${compact(m.ctx)}</td>
       <td class="muted" title="${m.minTokens ? faNum(m.minTokens) + ' توکن' : ''}">${compact(m.minTokens)}</td>
       <td class="muted" title="${m.maxTokens ? faNum(m.maxTokens) + ' توکن' : ''}">${compact(m.maxTokens)}</td>
