@@ -205,8 +205,6 @@ const PROVIDERS = [
     auth:"header", needsKey:true,  keyHint:"کلید Mistral" },
   { key:"bynara",     label:"Bynara",      url:"https://router.bynara.id/v1/models",
     auth:"header", needsKey:true,  keyHint:"کلید Bynara" },
-  { key:"tabitoken",  label:"TabiToken",   url:"https://tabitoken.com/v1/models",
-    auth:"header", needsKey:true,  keyHint:"کلید TabiToken" },
   { key:"tomdacat",   label:"TomDaCat",    url:"https://ai.tomdacat.com/api/models",
     auth:"header", needsKey:false, keyHint:"tdcc_... (اختیاری)" }
 ];
@@ -620,7 +618,7 @@ function normalizeTomdacat(raw){
   };
 }
 
-/* شِمای ناشناخته (Bynara، TabiToken): حدس محتاطانه بر پایهٔ الگوی رایج OpenAI-compatible */
+/* شِمای ناشناخته (Bynara،): حدس محتاطانه بر پایهٔ الگوی رایج OpenAI-compatible */
 function normalizeGeneric(raw, brandFallback){
   return {
     id: raw.id || raw.name, name: raw.name || raw.id,
@@ -648,7 +646,7 @@ const NORMALIZERS = {
   mistral:    normalizeMistral,
   tomdacat:   normalizeTomdacat,
   bynara:     raw => normalizeGeneric(raw, "Bynara"),
-  tabitoken:  raw => normalizeGeneric(raw, "TabiToken")
+  
 };
 
 async function fetchProvider(p){
