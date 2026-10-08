@@ -205,8 +205,12 @@ const PROVIDERS = [
     auth:"header", needsKey:true,  keyHint:"کلید Mistral" },
   { key:"bynara",     label:"Bynara",      url:"https://router.bynara.id/v1/models",
     auth:"header", needsKey:true,  keyHint:"کلید Bynara" },
-  { key:"tabitoken",  label:"TabiToken",   url:"https://tabitoken.com/v1/models",
-    auth:"header", needsKey:true,  keyHint:"کلید TabiToken" },
+    
+      { key:"apmix",     label:"apmix",      url:"https://api.apmix.ai/v1/models",
+    auth:"header", needsKey:true,  keyHint:"کلید apmix" },
+         { key:"orkarouter",     label:"orkarouter ",      url:"https://www.orcarouter.ai/v1/models",
+    auth:"header", needsKey:false,  keyHint:"کلید orkarouter" },
+    
   { key:"tomdacat",   label:"TomDaCat",    url:"https://ai.tomdacat.com/api/models",
     auth:"header", needsKey:false, keyHint:"tdcc_... (اختیاری)" }
 ];
@@ -244,7 +248,10 @@ const LABELS = {
   deprecation:"تاریخ منسوخ‌شدن", aliases:"نام‌های مستعار",
   input_modalities:"مودالیتی ورودی", output_modalities:"مودالیتی خروجی",
   is_specialized:"تخصصی", max_reference_images:"حداکثر تصاویر مرجع",
-  added_date:"تاریخ افزودن", paid_only:"فقط پولی", currency:"واحد پول"
+  added_date:"تاریخ افزودن", paid_only:"فقط پولی", currency:"واحد پول",
+  max_completion_tokens:"حداکثر توکن خروجی", min_completion_tokens:"حداقل توکن خروجی",
+  max_output_tokens:"حداکثر توکن خروجی", min_output_tokens:"حداقل توکن خروجی",
+  max_tokens:"حداکثر توکن", min_tokens:"حداقل توکن"
 };
 
 /* ================= کمکی‌ها ================= */
@@ -441,6 +448,8 @@ function normalizeOpenRouter(raw){
     category,
     inMods: inMods.length ? inMods : ["text"], outMods: outMods.length ? outMods : ["text"],
     ctx: raw.context_length ?? raw.top_provider?.context_length ?? null,
+    maxTokens: raw.top_provider?.max_completion_tokens ?? raw.max_completion_tokens ?? null,
+    minTokens: raw.top_provider?.min_completion_tokens ?? raw.min_completion_tokens ?? null,
     priceIn, priceOut,
     free: isFreeId(raw.id) || (priceIn === 0 && priceOut === 0),
     tools: arr(raw.supported_parameters).includes("tools"),
@@ -478,6 +487,8 @@ function normalizeUnoRouter(raw){
     category,
     inMods: inMods.length ? inMods : ["text"], outMods: outMods.length ? outMods : ["text"],
     ctx: raw.context_length ?? raw.max_tokens ?? raw.context_window ?? null,
+    maxTokens: raw.max_completion_tokens ?? raw.max_output_tokens ?? raw.top_provider?.max_completion_tokens ?? null,
+    minTokens: raw.min_completion_tokens ?? raw.min_output_tokens ?? null,
     priceIn, priceOut,
     free: isFreeId(raw.id) || (priceIn === 0 && priceOut === 0) || raw.free === true,
     tools: arr(raw.supported_parameters).includes("tools") || null,
@@ -503,6 +514,8 @@ function normalizeGroq(raw){
     inMods: isAudio ? ["audio"] : ["text"],
     outMods: isAudio ? (outAudio ? ["audio"] : ["text"]) : ["text"],
     ctx: raw.context_window ?? raw.context_length ?? null,
+    maxTokens: raw.max_completion_tokens ?? null,
+    minTokens: null,
     priceIn: null, priceOut: null,
     free: isFreeId(id) || null,
     tools: null, reasoning: null,
@@ -530,6 +543,8 @@ function normalizeGoogle(raw){
     brand: "Google",
     category, inMods:["text"], outMods,
     ctx: raw.inputTokenLimit ?? null,
+    maxTokens: raw.outputTokenLimit ?? null,
+    minTokens: null,
     priceIn: null, priceOut: null,
     free: isFreeId(id) || null,
     tools: null, reasoning: null,
@@ -549,6 +564,8 @@ function normalizeAnyModel(raw){
     inMods: ["text"],
     outMods: category === "image" ? ["image"] : ["text"],
     ctx: null,
+    maxTokens: raw.max_tokens ?? raw.max_output_tokens ?? null,
+    minTokens: raw.min_tokens ?? raw.min_output_tokens ?? null,
     priceIn: null, priceOut: null,
     free: isFreeId(raw.id) || null,
     tools: null, reasoning: null,
@@ -568,6 +585,8 @@ function normalizeMistral(raw){
     inMods: cap.vision ? ["text","image"] : ["text"],
     outMods: ["text"],
     ctx: raw.max_context_length ?? null,
+    maxTokens: raw.max_completion_tokens ?? raw.max_output_tokens ?? null,
+    minTokens: raw.min_completion_tokens ?? raw.min_output_tokens ?? null,
     priceIn: null, priceOut: null,
     free: isFreeId(raw.id) || null,
     tools: cap.function_calling === true || null,
@@ -593,6 +612,8 @@ function normalizeTomdacat(raw){
     inMods: caps.includes("vision") ? ["text","image"] : ["text"],
     outMods: ["text"],
     ctx: null,
+    maxTokens: raw.max_tokens ?? raw.max_output_tokens ?? p.max_tokens ?? null,
+    minTokens: raw.min_tokens ?? raw.min_output_tokens ?? null,
     priceIn: null, priceOut: null,
     free,
     tools: caps.some(c => /tool|function/i.test(c)) || null,
@@ -603,7 +624,7 @@ function normalizeTomdacat(raw){
   };
 }
 
-/* شِمای ناشناخته (Bynara، TabiToken): حدس محتاطانه بر پایهٔ الگوی رایج OpenAI-compatible */
+/* شِمای ناشناخته (Bynara،): حدس محتاطانه بر پایهٔ الگوی رایج OpenAI-compatible */
 function normalizeGeneric(raw, brandFallback){
   return {
     id: raw.id || raw.name, name: raw.name || raw.id,
@@ -611,6 +632,8 @@ function normalizeGeneric(raw, brandFallback){
     category: "chat",
     inMods: ["text"], outMods: ["text"],
     ctx: raw.context_length ?? raw.max_tokens ?? raw.context_window ?? null,
+    maxTokens: raw.max_output_tokens ?? raw.max_completion_tokens ?? null,
+    minTokens: raw.min_tokens ?? raw.min_output_tokens ?? null,
     priceIn: null, priceOut: null,
     free: isFreeId(raw.id || raw.name) || null,
     tools: null, reasoning: raw.reasoning != null ? !!raw.reasoning : null,
@@ -629,7 +652,9 @@ const NORMALIZERS = {
   mistral:    normalizeMistral,
   tomdacat:   normalizeTomdacat,
   bynara:     raw => normalizeGeneric(raw, "Bynara"),
-  tabitoken:  raw => normalizeGeneric(raw, "TabiToken")
+  apmix:     raw => normalizeGeneric(raw, "Apmix"),
+  orkarouter:     raw => normalizeGeneric(raw, "Orkarouter"),
+  
 };
 
 async function fetchProvider(p){
@@ -776,6 +801,8 @@ function visible(){
     : col === "provider" ? m.providerLabel
     : col === "category" ? (CAT_LABELS[m.category] || m.category)
     : col === "ctx" ? (m.ctx ?? -1)
+    : col === "minTokens" ? (m.minTokens ?? -1)
+    : col === "maxTokens" ? (m.maxTokens ?? -1)
     : col === "priceIn" ? (m.priceIn ?? -1)
     : col === "priceOut" ? (m.priceOut ?? -1)
     : col === "free" ? (m.free ? 1 : 0)
@@ -791,7 +818,7 @@ function visible(){
 }
 
 /* ================= رندر ================= */
-const COL_COUNT = 9;
+const COL_COUNT = 11;
 
 function render(){
   const list = visible();
@@ -806,8 +833,10 @@ function render(){
     ${th("name","مدل","نام و شناسه","name-col")}
     ${th("provider","ارائه‌دهنده","")}
     ${th("category","دسته","")}
-    <th>ورودی → خروجی</th>
+    <th>ورودی ⬅️ خروجی</th>
     ${th("ctx","پنجره متن","توکن")}
+    ${th("minTokens","حداقل خروجی","توکن")}
+    ${th("maxTokens","حداکثر خروجی","توکن")}
     ${th("priceIn","قیمت ورودی","$/1M توکن")}
     ${th("priceOut","قیمت خروجی","$/1M توکن")}
     ${th("free","رایگان","")}
@@ -821,8 +850,10 @@ function render(){
       </td>
       <td><span class="badge" style="background:${provColor(m.provider)}">${esc(m.providerLabel)}</span></td>
       <td class="muted">${esc(CAT_LABELS[m.category] || m.category)}</td>
-      <td class="mods">${esc(m.inMods.map(x => MOD_FA[x] || x).join("+"))} → ${esc(m.outMods.map(x => MOD_FA[x] || x).join("+"))}</td>
+      <td class="mods">${esc(m.inMods.map(x => MOD_FA[x] || x).join("+"))} ⬅️ ${esc(m.outMods.map(x => MOD_FA[x] || x).join("+"))}</td>
       <td title="${m.ctx ? faNum(m.ctx) + ' توکن' : ''}">${compact(m.ctx)}</td>
+      <td class="muted" title="${m.minTokens ? faNum(m.minTokens) + ' توکن' : ''}">${compact(m.minTokens)}</td>
+      <td class="muted" title="${m.maxTokens ? faNum(m.maxTokens) + ' توکن' : ''}">${compact(m.maxTokens)}</td>
       <td class="price">${priceStr(m.priceIn)}</td>
       <td class="price">${priceStr(m.priceOut)}</td>
       <td>${boolCell(m.free)}</td>
