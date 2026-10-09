@@ -141,6 +141,7 @@
       <button id="reload" type="button">بارگیری مجدد</button>
       <button id="csv" type="button">خروجی CSV</button>
       <button id="json" type="button">خروجی JSON</button>
+      <button id="txt" type="button">خروجی TXT ساده</button>
       <span class="sub" id="count" aria-live="polite"></span>
     </div>
 
@@ -173,6 +174,36 @@
         <button id="savekeys" type="button">ذخیره و بارگیری مجدد</button>
         <button id="clearkeys" type="button">پاک کردن همه کلیدها</button>
         <span class="statusmsg" id="settingsMsg" aria-live="polite"></span>
+      </div>
+
+      <p class="keysub">افزودن ارائه‌دهنده سفارشی (آدرس باید یک endpoint لیست مدل‌ها، مشابه
+        <code>/v1/models</code> بَیناراو OpenRouter، برگرداند):</p>
+      <div class="keyrow">
+        <label for="newProvLabel">برچسب</label>
+        <input id="newProvLabel" type="text" placeholder="مثلاً MyRouter">
+      </div>
+      <div class="keyrow">
+        <label for="newProvUrl">آدرس مدل‌ها</label>
+        <input id="newProvUrl" type="text" placeholder="https://example.com/v1/models" style="direction:ltr">
+      </div>
+      <div class="keyrow">
+        <label for="newProvAuth">نوع احراز هویت</label>
+        <select id="newProvAuth">
+          <option value="header">هدر Authorization: Bearer</option>
+          <option value="query">پارامتر کوئری (مثل ?key=)</option>
+        </select>
+      </div>
+      <div class="keyrow" id="newProvQueryRow" style="display:none">
+        <label for="newProvQueryParam">نام پارامتر کوئری</label>
+        <input id="newProvQueryParam" type="text" value="key" style="direction:ltr">
+      </div>
+      <div class="keyrow">
+        <label for="newProvKey">کلید API</label>
+        <input id="newProvKey" type="password" placeholder="اختیاری">
+      </div>
+      <div class="keyrow">
+        <button id="addProvider" type="button">افزودن ارائه‌دهنده</button>
+        <span class="statusmsg" id="addProviderMsg" aria-live="polite"></span>
       </div>
     </details>
   </div>
@@ -215,6 +246,26 @@ const PROVIDERS = [
   { key:"tomdacat",   label:"TomDaCat",    url:"https://ai.tomdacat.com/api/models",
     auth:"header", needsKey:false, keyHint:"tdcc_... (اختیاری)" }
 ];
+
+/* ================= ارائه‌دهنده‌های سفارشی (افزوده‌شده توسط کاربر) =================
+   همان شکل آبجکت PROVIDERS بالا را دارند (key, label, url, auth, queryParam, needsKey,
+   keyHint) به‌علاوه custom:true، و فقط در localStorage همین مرورگر ذخیره می‌شوند. */
+const CUSTOM_KEY = "provider_models_custom_providers_v1";
+function loadCustomProviders(){
+  try{ const a = JSON.parse(localStorage.getItem(CUSTOM_KEY)); return Array.isArray(a) ? a : []; }
+  catch{ return []; }
+}
+function saveCustomProviders(a){ try{ localStorage.setItem(CUSTOM_KEY, JSON.stringify(a)); }catch{} }
+let customProviders = loadCustomProviders();
+function allProviders(){ return [...PROVIDERS, ...customProviders]; }
+function slugifyKey(s){
+  const base = String(s || "").trim().toLowerCase()
+    .replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "") || "provider";
+  let k = base, n = 2;
+  const used = new Set(allProviders().map(p => p.key));
+  while (used.has(k)) k = `${base}-${n++}`;
+  return k;
+}
 
 const PROXY_TEMPLATES = [
   { id:"path",    label:"{proxy}/{url} — مسیر مستقیم (رایج‌ترین حالت Worker)" },
@@ -264,7 +315,7 @@ const proxyUrlEl = $("proxyUrl"), proxyTplEl = $("proxyTpl"), customTplRowEl = $
       keyRowsEl = $("keyRows"), settingsMsgEl = $("settingsMsg");
 
 let models = [];
-let activeProviders = new Set(PROVIDERS.map(p => p.key));
+let activeProviders = new Set(allProviders().map(p => p.key));
 let activeCats = new Set();
 let sort = { col:"name", dir:1 };
 
@@ -365,13 +416,14 @@ function renderSettingsPanel(){
   proxyEncodeEl.checked = !!proxySettings.encode;
 
   const keys = loadKeys();
-  keyRowsEl.innerHTML = PROVIDERS.map(p => {
+  keyRowsEl.innerHTML = allProviders().map(p => {
     const st = keys[p.key] || {};
     return `<div class="keyrow" data-p="${esc(p.key)}">
       <label class="p-chk"><input type="checkbox" class="p-enabled" ${st.enabled !== false ? "checked" : ""}>
-        ${esc(p.label)}${p.needsKey ? "" : " (کلید اختیاری)"}</label>
+        ${esc(p.label)}${p.needsKey ? "" : " (کلید اختیاری)"}${p.custom ? " — سفارشی" : ""}</label>
       <input type="password" class="p-key" placeholder="${esc(p.keyHint || "API key")}"
         value="${esc(st.key || "")}" autocomplete="off">
+      ${p.custom ? `<button type="button" class="rmProv" data-k="${esc(p.key)}">حذف</button>` : ""}
     </div>`;
   }).join("");
 }
@@ -379,6 +431,50 @@ renderSettingsPanel();
 
 proxyTplEl.addEventListener("change", () => {
   customTplRowEl.style.display = proxyTplEl.value === "custom" ? "" : "none";
+});
+
+$("newProvAuth").addEventListener("change", () => {
+  $("newProvQueryRow").style.display = $("newProvAuth").value === "query" ? "" : "none";
+});
+
+keyRowsEl.addEventListener("click", e => {
+  const btn = e.target.closest(".rmProv");
+  if (!btn) return;
+  const k = btn.dataset.k;
+  customProviders = customProviders.filter(p => p.key !== k);
+  saveCustomProviders(customProviders);
+  activeProviders.delete(k);
+  const keys = loadKeys(); delete keys[k]; saveKeys(keys);
+  renderSettingsPanel();
+  load();
+});
+
+$("addProvider").addEventListener("click", () => {
+  const label = $("newProvLabel").value.trim();
+  const url = $("newProvUrl").value.trim();
+  const auth = $("newProvAuth").value;
+  const queryParam = $("newProvQueryParam").value.trim() || "key";
+  const key = $("newProvKey").value.trim();
+  const msg = $("addProviderMsg");
+  if (!label || !url){ msg.textContent = "برچسب و آدرس الزامی‌اند."; return; }
+  if (!/^https?:\/\//i.test(url)){ msg.textContent = "آدرس باید با http(s):// شروع شود."; return; }
+
+  const k = slugifyKey(label);
+  customProviders.push({
+    key:k, label, url, auth, queryParam: auth === "query" ? queryParam : undefined,
+    needsKey:false, keyHint:"کلید API", custom:true
+  });
+  saveCustomProviders(customProviders);
+  if (key){
+    const keys = loadKeys();
+    keys[k] = { key, enabled:true };
+    saveKeys(keys);
+  }
+  activeProviders.add(k);
+  $("newProvLabel").value = ""; $("newProvUrl").value = ""; $("newProvKey").value = "";
+  msg.textContent = "اضافه شد؛ در حال بارگیری…";
+  renderSettingsPanel();
+  load();
 });
 
 $("savekeys").addEventListener("click", () => {
@@ -693,7 +789,7 @@ async function fetchProvider(p){
     throw Object.assign(new Error(`${p.label}: پاسخ JSON معتبر نبود — ${text.slice(0,120)}`),
       { key:p.key, label:p.label, url:finalUrl, kind:"parse" });
   }
-  const norm = NORMALIZERS[p.key];
+  const norm = NORMALIZERS[p.key] || (raw => normalizeGeneric(raw, p.label));
   return extractList(data).map(raw => ({ ...norm(raw), provider:p.key, providerLabel:p.label }));
 }
 
@@ -702,7 +798,7 @@ async function load(){
   out.innerHTML = `<div class="state"><div class="spinner"></div>در حال دریافت مدل‌ها…</div>`;
   countEl.textContent = "";
 
-  const active = PROVIDERS.filter(p => getKeyEntry(p.key).enabled);
+  const active = allProviders().filter(p => getKeyEntry(p.key).enabled);
   const results = await Promise.allSettled(active.map(fetchProvider));
   const ok = results.filter(r => r.status === "fulfilled").flatMap(r => r.value);
   const errs = results.filter(r => r.status === "rejected").map(r => r.reason);
@@ -737,13 +833,13 @@ function buildFilters(){
   pfiltersEl.querySelectorAll(".f").forEach(b => b.remove());
   cfiltersEl.querySelectorAll(".f").forEach(b => b.remove());
 
-  PROVIDERS.forEach(p => {
+  allProviders().forEach(p => {
     const count = models.filter(m => m.provider === p.key).length;
     const b = document.createElement("button");
     b.type = "button"; b.className = "f prov"; b.dataset.p = p.key;
     b.style.setProperty("--pc", provColor(p.key));
     b.setAttribute("aria-pressed", String(activeProviders.has(p.key)));
-    b.textContent = `${p.label} (${faNum(count)})`;
+    b.textContent = `${p.label} (${faNum(count)})${p.custom ? " ⚙" : ""}`;
     b.disabled = count === 0;
     b.addEventListener("click", () => {
       activeProviders.has(p.key) ? activeProviders.delete(p.key) : activeProviders.add(p.key);
@@ -926,6 +1022,25 @@ function toJSON(){
     "model-name-id-provider.json");
 }
 
+/* خروجی متنی ساده: فقط نام provider در یک خط، و زیرش شناسهٔ هر مدل در خط‌های بعدی —
+   بدون هیچ علامت/بولت/شماره‌ای. گروه‌بندی بر اساس ترتیب فعلیِ جدول (visible) است. */
+function toTXT(){
+  const list = visible();
+  const order = [], groups = new Map();
+  list.forEach(m => {
+    if (!groups.has(m.providerLabel)){ groups.set(m.providerLabel, []); order.push(m.providerLabel); }
+    groups.get(m.providerLabel).push(m.id);
+  });
+  const lines = [];
+  order.forEach(label => {
+    lines.push(label);
+    groups.get(label).forEach(id => lines.push(id));
+    lines.push("");
+  });
+  while (lines.length && lines[lines.length - 1] === "") lines.pop();
+  download(new Blob([lines.join("\n")], { type:"text/plain;charset=utf-8" }), "models.txt");
+}
+
 /* ================= رویدادها ================= */
 let debounce;
 qEl.addEventListener("input", () => { clearTimeout(debounce); debounce = setTimeout(render, 150); });
@@ -933,6 +1048,7 @@ accessEl.addEventListener("change", render);
 $("reload").addEventListener("click", load);
 $("csv").addEventListener("click", toCSV);
 $("json").addEventListener("click", toJSON);
+$("txt").addEventListener("click", toTXT);
 
 out.addEventListener("click", e => {
   const head = e.target.closest("th[data-sort]");
