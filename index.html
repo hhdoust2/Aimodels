@@ -66,7 +66,7 @@
 
   .tablebox{overflow:auto; max-height:74vh; border:1px solid var(--border);
             border-radius:14px; background:var(--panel)}
-  table{border-collapse:separate; border-spacing:0; width:100%; font-size:.84rem}
+  table{border-collapse:separate; border-spacing:0; width:100%; min-width:960px; font-size:.84rem}
   thead th{position:sticky; top:0; z-index:3; background:var(--panel);
            border-bottom:1px solid var(--border); padding:9px 10px;
            text-align:center; white-space:nowrap; font-weight:600}
@@ -80,12 +80,11 @@
   tbody tr.row:nth-child(even){background:var(--row-alt)}
   tbody tr.row:hover{background:var(--row-hover)}
   td.name-col,th.name-col{position:sticky; right:0; background:inherit; text-align:right;
-       border-inline-start:1px solid var(--border); max-width:320px; white-space:normal}
+       border-inline-start:1px solid var(--border); min-width:190px; max-width:320px; white-space:normal}
   thead th.name-col{background:var(--panel)}
-  .mtitle{font-weight:600}
   .mid{display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:6px;
-       color:var(--muted); font-size:.75rem; direction:ltr; text-align:right}
-  .mid .mid-text{word-break:break-all}
+       color:var(--text); font-size:.84rem; direction:ltr; text-align:right}
+  .mid .mid-text{word-break:break-word; overflow-wrap:break-word; font-weight:600}
   .copyBtn{flex:none; border:1px solid var(--border); background:var(--chip); color:var(--muted);
        border-radius:6px; padding:0 5px; height:18px; line-height:16px; font-size:.78rem;
        cursor:pointer}
@@ -933,7 +932,7 @@ function render(){
        ${sub ? `<span class="cat">${esc(sub)}</span>` : ""}</th>`;
 
   const head = `<tr>
-    ${th("name","مدل","نام و شناسه","name-col")}
+    ${th("name","مدل","شناسه","name-col")}
     ${th("provider","ارائه‌دهنده","")}
     ${th("category","دسته","")}
     <th>ورودی ⬅️ خروجی</th>
@@ -948,7 +947,6 @@ function render(){
 
   const body = list.map(m => `<tr class="row" data-id="${esc(m.provider + '::' + m.id)}" tabindex="0">
       <td class="name-col">
-        <span class="mtitle">${esc(m.name)}</span>
         <span class="mid"><span class="mid-text">${esc(m.id)}</span><button type="button"
           class="copyBtn" data-copy="${esc(m.id)}" title="کپی شناسه" aria-label="کپی شناسه">⧉</button></span>
       </td>
