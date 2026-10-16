@@ -83,8 +83,14 @@
        border-inline-start:1px solid var(--border); max-width:320px; white-space:normal}
   thead th.name-col{background:var(--panel)}
   .mtitle{font-weight:600}
-  .mid{display:block; color:var(--muted); font-size:.75rem; direction:ltr; text-align:right;
-       word-break:break-all}
+  .mid{display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:6px;
+       color:var(--muted); font-size:.75rem; direction:ltr; text-align:right}
+  .mid .mid-text{word-break:break-all}
+  .copyBtn{flex:none; border:1px solid var(--border); background:var(--chip); color:var(--muted);
+       border-radius:6px; padding:0 5px; height:18px; line-height:16px; font-size:.78rem;
+       cursor:pointer}
+  .copyBtn:hover{border-color:var(--accent); color:var(--accent)}
+  .copyBtn.copied{border-color:#3ddc97; color:#3ddc97}
   .yes{color:var(--uno); font-weight:700}
   .no{color:var(--none)}
   .muted{color:var(--muted)}
@@ -943,7 +949,8 @@ function render(){
   const body = list.map(m => `<tr class="row" data-id="${esc(m.provider + '::' + m.id)}" tabindex="0">
       <td class="name-col">
         <span class="mtitle">${esc(m.name)}</span>
-        <span class="mid">${esc(m.id)}</span>
+        <span class="mid"><span class="mid-text">${esc(m.id)}</span><button type="button"
+          class="copyBtn" data-copy="${esc(m.id)}" title="کپی شناسه" aria-label="کپی شناسه">⧉</button></span>
       </td>
       <td><span class="badge" style="background:${provColor(m.provider)}">${esc(m.providerLabel)}</span></td>
       <td class="muted">${esc(CAT_LABELS[m.category] || m.category)}</td>
@@ -1050,7 +1057,31 @@ $("csv").addEventListener("click", toCSV);
 $("json").addEventListener("click", toJSON);
 $("txt").addEventListener("click", toTXT);
 
+async function copyText(text){
+  try{
+    if (navigator.clipboard && window.isSecureContext){ await navigator.clipboard.writeText(text); return true; }
+  }catch{}
+  try{
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  }catch{ return false; }
+}
+
 out.addEventListener("click", e => {
+  const copyBtn = e.target.closest(".copyBtn");
+  if (copyBtn){
+    e.stopPropagation();
+    copyText(copyBtn.dataset.copy).then(ok => {
+      if (!ok) return;
+      copyBtn.classList.add("copied"); copyBtn.textContent = "✓";
+      setTimeout(() => { copyBtn.classList.remove("copied"); copyBtn.textContent = "⧉"; }, 1200);
+    });
+    return;
+  }
   const head = e.target.closest("th[data-sort]");
   if (head){
     const col = head.dataset.sort;
@@ -1064,6 +1095,7 @@ out.addEventListener("click", e => {
 });
 out.addEventListener("keydown", e => {
   if (e.key !== "Enter" && e.key !== " ") return;
+  if (e.target.closest(".copyBtn")) return;
   const row = e.target.closest("tr.row");
   if (row){ e.preventDefault(); toggleDetail(row); }
 });
