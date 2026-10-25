@@ -240,14 +240,6 @@ const PROVIDERS = [
     auth:"header", needsKey:false, keyHint:"... (اختیاری)" },
   { key:"mistral",    label:"Mistral AI",  url:"https://api.mistral.ai/v1/models",
     auth:"header", needsKey:true,  keyHint:"کلید Mistral" },
-  { key:"bynara",     label:"Bynara",      url:"https://router.bynara.id/v1/models",
-    auth:"header", needsKey:true,  keyHint:"کلید Bynara" },
-    
-      { key:"apmix",     label:"apmix",      url:"https://api.apmix.ai/v1/models",
-    auth:"header", needsKey:true,  keyHint:"کلید apmix" },
-         { key:"orkarouter",     label:"orkarouter ",      url:"https://www.orcarouter.ai/v1/models",
-    auth:"header", needsKey:false,  keyHint:"کلید orkarouter" },
-    
   { key:"tomdacat",   label:"TomDaCat",    url:"https://ai.tomdacat.com/api/models",
     auth:"header", needsKey:false, keyHint:"tdcc_... (اختیاری)" }
 ];
@@ -754,8 +746,6 @@ const NORMALIZERS = {
   mistral:    normalizeMistral,
   tomdacat:   normalizeTomdacat,
   bynara:     raw => normalizeGeneric(raw, "Bynara"),
-  apmix:     raw => normalizeGeneric(raw, "Apmix"),
-  orkarouter:     raw => normalizeGeneric(raw, "Orkarouter"),
   
 };
 
