@@ -236,8 +236,6 @@ const PROVIDERS = [
     auth:"header", needsKey:true,  keyHint:"gsk_..." },
   { key:"google",     label:"Google",      url:"https://generativelanguage.googleapis.com/v1beta/models",
     auth:"query",  queryParam:"key", needsKey:true, keyHint:"AIza..." },
-  { key:"anymodel",   label:"AnyModel",    url:"https://anymodel.org/v1/models",
-    auth:"header", needsKey:false, keyHint:"... (اختیاری)" },
   { key:"mistral",    label:"Mistral AI",  url:"https://api.mistral.ai/v1/models",
     auth:"header", needsKey:true,  keyHint:"کلید Mistral" },
   { key:"tomdacat",   label:"TomDaCat",    url:"https://ai.tomdacat.com/api/models",
@@ -648,26 +646,7 @@ function normalizeGoogle(raw){
   };
 }
 
-/* AnyModel: قیمت‌گذاری ضریبی (billing.coefficient) است، نه دلاری مستقیم */
-function normalizeAnyModel(raw){
-  const category = raw.kind === "image" ? "image" : "chat";
-  return {
-    id: raw.id, name: raw.id,
-    brand: guessBrand(raw.id, "AnyModel"),
-    category,
-    inMods: ["text"],
-    outMods: category === "image" ? ["image"] : ["text"],
-    ctx: null,
-    maxTokens: raw.max_tokens ?? raw.max_output_tokens ?? null,
-    minTokens: raw.min_tokens ?? raw.min_output_tokens ?? null,
-    priceIn: null, priceOut: null,
-    free: isFreeId(raw.id) || null,
-    tools: null, reasoning: null,
-    created: null,
-    description: raw.billing ? "قیمت‌گذاری ضریبی — جزئیات در دادهٔ خام" : "",
-    raw
-  };
-}
+
 
 /* Mistral AI: شِمای سازگار با OpenAI؛ قیمت‌گذاری در همین اندپوینت اعلام نمی‌شود */
 function normalizeMistral(raw){
@@ -742,7 +721,6 @@ const NORMALIZERS = {
   unorouter:  normalizeUnoRouter,
   groq:       normalizeGroq,
   google:     normalizeGoogle,
-  anymodel:   normalizeAnyModel,
   mistral:    normalizeMistral,
   tomdacat:   normalizeTomdacat,
   bynara:     raw => normalizeGeneric(raw, "Bynara"),
